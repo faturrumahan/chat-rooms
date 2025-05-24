@@ -1,16 +1,60 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-import { onMounted, watch } from 'vue'
+import { RouterLink } from 'vue-router'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRooms } from './stores/rooms'
 
 const route = useRoute()
 const rooms = useRooms()
 
-onMounted(() => {
-  rooms.fetchData()
+onMounted(async () => {
+  await rooms.fetchData()
+
+  if (rooms.data?.data?.customer_rooms) {
+    allMessages.value = rooms.data.data.customer_rooms
+  }
 })
+
+const allMessages = ref([])
+const messages = ref([])
+
+const lastSendMessage = ref('')
+const message = ref('')
+const messageContainer = ref(null)
+
+function handleSendMessage() {
+  if (message.value.trim() !== '') {
+    lastSendMessage.value = message.value
+    messages.value.push({ name: null, message: message.value })
+    message.value = ''
+    scrollToBottom()
+  }
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    const el = messageContainer.value
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  })
+}
+
+watch(
+  () => route.params.roomId,
+  (roomId) => {
+    if (roomId) {
+      lastSendMessage.value = ''
+      messages.value = rooms.data.data.customer_rooms
+        .filter((item) => item.room_id == roomId && item.last_customer_comment_text)
+        .map((item) => ({
+          name: item.name,
+          message: item.last_customer_comment_text,
+        }))
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -32,7 +76,7 @@ onMounted(() => {
       <div v-else-if="rooms.error">Error: {{ rooms.error.message }}</div>
       <ul v-else-if="rooms.data">
         <li
-          v-for="item in rooms.data.data.customer_rooms"
+          v-for="item in allMessages"
           :key="item.room_id"
           :class="
             item.room_id == route.params.roomId
@@ -49,7 +93,13 @@ onMounted(() => {
               />
               <div>
                 <p :class="item.room_id == route.params.roomId && 'font-bold'">{{ item.name }}</p>
-                <p class="text-gray-500 italic text-sm">{{ item.user_id }}</p>
+                <p class="text-gray-500 italic text-sm">
+                  {{
+                    route.params.roomId == item.room_id
+                      ? lastSendMessage || item.last_customer_comment_text
+                      : item.last_customer_comment_text
+                  }}
+                </p>
               </div>
             </div>
           </RouterLink>
@@ -59,7 +109,47 @@ onMounted(() => {
     </nav>
   </header>
 
-  <div class="flex-1 bg-[#222831] rounded-lg p-5">{{ route.params.roomId || 'welcome' }}</div>
+  <div class="flex-1 bg-[#222831] rounded-lg p-5">
+    <div class="flex flex-col h-full gap-3">
+      <div class="flex-1 overflow-y-scroll hide-scroll" ref="messageContainer">
+        <!-- <div class="flex flex-col justify-end h-full">{{ route.params.roomId || 'welcome' }}</div> -->
+        <div class="flex flex-col justify-end">
+          <ul>
+            <li
+              v-for="(msg, index) in messages"
+              :key="index"
+              :class="['flex', msg.name == null ? 'justify-end' : 'justify-start']"
+            >
+              <div class="px-5 py-3 rounded-lg bg-slate-950 mb-1">
+                <p class="text-gray-500 italic text-sm">
+                  {{ msg.name || 'You' }}
+                </p>
+                <p>{{ msg.message }}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <form
+        @submit.prevent="handleSendMessage"
+        class="h-fit px-5 py-3 bg-slate-950 rounded-lg flex justify-between items-center gap-3"
+      >
+        <input
+          v-model="message"
+          type="text"
+          class="flex-1 focus:outline-hidden"
+          placeholder="Type your message..."
+        />
+        <button
+          type="button"
+          class="bg-[#393E46] rounded-lg px-3 py-1 hover:cursor-pointer hover:bg-[#393e4686]"
+          @click="handleSendMessage"
+        >
+          send
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- <RouterView /> -->
 </template>
