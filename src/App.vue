@@ -59,18 +59,6 @@ watch(
 
 <template>
   <header class="w-1/3 max-h-screen overflow-y-scroll hide-scroll px-3">
-    <!-- <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/chat/asd">chat</RouterLink>
-        <RouterLink to="/chat/dsa">chat</RouterLink>
-      </nav>
-    </div> -->
     <nav>
       <div v-if="rooms.loading">Loading...</div>
       <div v-else-if="rooms.error">Error: {{ rooms.error.message }}</div>
@@ -110,7 +98,7 @@ watch(
   </header>
 
   <div class="flex-1 bg-[#222831] rounded-lg p-5">
-    <div class="flex flex-col h-full gap-3">
+    <div v-if="route.params.roomId" class="flex flex-col h-full gap-3">
       <div class="h-fit px-5 py-3 bg-[#DFD0B8] rounded-lg text-[#222831] flex gap-3 items-center">
         <img
           :src="allMessages.find((item) => item.room_id == route.params.roomId)?.user_avatar_url"
@@ -127,7 +115,6 @@ watch(
         </div>
       </div>
       <div class="flex-1 overflow-y-scroll hide-scroll" ref="messageContainer">
-        <!-- <div class="flex flex-col justify-end h-full">{{ route.params.roomId || 'welcome' }}</div> -->
         <div class="flex flex-col justify-end">
           <ul>
             <li
@@ -163,6 +150,9 @@ watch(
           send
         </button>
       </form>
+    </div>
+    <div v-else class="flex w-full h-full items-center justify-center font-bold">
+      Welcome To Chat Room
     </div>
   </div>
 
