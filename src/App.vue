@@ -96,8 +96,8 @@ watch(
                 <p class="text-gray-500 italic text-sm">
                   {{
                     route.params.roomId == item.room_id
-                      ? lastSendMessage || item.last_customer_comment_text
-                      : item.last_customer_comment_text
+                      ? lastSendMessage || item.last_comment_text || item.last_customer_comment_text
+                      : item.last_comment_text || item.last_customer_comment_text
                   }}
                 </p>
               </div>
@@ -111,6 +111,21 @@ watch(
 
   <div class="flex-1 bg-[#222831] rounded-lg p-5">
     <div class="flex flex-col h-full gap-3">
+      <div class="h-fit px-5 py-3 bg-[#DFD0B8] rounded-lg text-[#222831] flex gap-3 items-center">
+        <img
+          :src="allMessages.find((item) => item.room_id == route.params.roomId)?.user_avatar_url"
+          :alt="allMessages.find((item) => item.room_id == route.params.roomId)?.name + ' avatar'"
+          class="w-10 h-10 rounded-full border"
+        />
+        <div>
+          <p class="font-bold">
+            {{ allMessages.find((item) => item.room_id == route.params.roomId)?.name }}
+          </p>
+          <p class="text-gray-500 italic text-xs">
+            {{ allMessages.find((item) => item.room_id == route.params.roomId)?.user_id }}
+          </p>
+        </div>
+      </div>
       <div class="flex-1 overflow-y-scroll hide-scroll" ref="messageContainer">
         <!-- <div class="flex flex-col justify-end h-full">{{ route.params.roomId || 'welcome' }}</div> -->
         <div class="flex flex-col justify-end">
