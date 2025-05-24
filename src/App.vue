@@ -155,8 +155,6 @@ watch(
       Welcome To Chat Room
     </div>
   </div>
-
-  <!-- <RouterView /> -->
 </template>
 
 <style>
